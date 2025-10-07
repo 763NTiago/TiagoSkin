@@ -1,70 +1,30 @@
--- Mod de Skin Personalizada para Tiago
--- Versão melhorada e compatível
+-- Skin exclusiva para jogador "Tiago" no Mineclonia
 
--- Aguarda um pouco antes de aplicar a skin (garante que tudo carregou)
-minetest.register_on_joinplayer(function(player)
-    local player_name = player:get_player_name()
-    
-    if player_name == "Tiago" then
-        -- Aguarda 1 segundo antes de aplicar (permite outros mods carregarem)
-        minetest.after(1, function()
-            -- Método 1: Aplicar textura diretamente
-            player:set_properties({
-                textures = {"tiago_skin.png"},
-                visual = "upright_sprite",
-                visual_size = {x=1, y=2},
-            })
-            
-            -- Se estiver usando o mod default, força atualização
-            if minetest.get_modpath("default") then
-                player:set_properties({
-                    textures = {"tiago_skin.png"},
-                    visual = "upright_sprite",
-                    visual_size = {x=1, y=2},
-                    collisionbox = {-0.3, 0.0, -0.3, 0.3, 1.7, 0.3},
-                })
-            end
-            
-            -- Mensagem de confirmação
-            minetest.chat_send_player(player_name, "Skin personalizada carregada com sucesso!")
-            minetest.log("action", "[TiagoSkin] Skin aplicada para " .. player_name)
-        end)
+local SKIN_TEXTURE = "tiago_skin.png"
+local PLAYER_NAME = "Tiago"
+
+local function aplicar_skin(player)
+    if not player or not player:is_player() then return end
+    if player:get_player_name() == PLAYER_NAME then
+        if player.set_texture then
+            player:set_texture(SKIN_TEXTURE)
+            minetest.chat_send_player(PLAYER_NAME, "✅ Sua skin exclusiva foi aplicada!")
+            minetest.log("action", "[tiagoskin_force] Skin aplicada para " .. PLAYER_NAME)
+        else
+            minetest.chat_send_player(PLAYER_NAME, "⚠️ Este jogo não suporta set_texture diretamente.")
+        end
     end
+end
+
+minetest.register_on_joinplayer(function(player)
+    minetest.after(1, function()
+        aplicar_skin(player)
+    end)
 end)
 
--- Garante que a skin persiste após respawn
 minetest.register_on_respawnplayer(function(player)
-    local player_name = player:get_player_name()
-    
-    if player_name == "Tiago" then
-        minetest.after(0.5, function()
-            player:set_properties({
-                textures = {"tiago_skin.png"},
-                visual = "upright_sprite",
-                visual_size = {x=1, y=2},
-            })
-        end)
-    end
+    minetest.after(0.5, function()
+        aplicar_skin(player)
+    end)
     return false
 end)
-
--- Comando de debug para testar a skin manualmente
-minetest.register_chatcommand("testskin", {
-    params = "",
-    description = "Testa a aplicação da skin personalizada",
-    privs = {server = true},
-    func = function(name, param)
-        local player = minetest.get_player_by_name(name)
-        if player then
-            player:set_properties({
-                textures = {"tiago_skin.png"},
-                visual = "upright_sprite",
-                visual_size = {x=1, y=2},
-            })
-            return true, "Skin aplicada! Se não aparecer, verifique se tiago_skin.png está na pasta textures/"
-        end
-        return false, "Erro ao encontrar jogador"
-    end,
-})
-
-minetest.log("action", "[TiagoSkin] Mod carregado com sucesso!")
